@@ -187,8 +187,8 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> with SingleTick
                     right: AppSpacing.md,
                     child: FloatingActionButton.small(
                       backgroundColor: AppColors.surfaceWhite,
-                      child: const Icon(Icons.center_focus_strong, color: AppColors.textSecondary),
                       onPressed: _resetView,
+                      child: const Icon(Icons.center_focus_strong, color: AppColors.textSecondary),
                     ),
                   ),
                   const Positioned(
@@ -257,7 +257,7 @@ class _SelectedZoneCard extends StatelessWidget {
             Row(
               children: [
                 StatusBadge(
-                  label: '${Formatters.capitalize(zone.moistureCategory.name)} — ${zone.currentMoisturePercent.toStringAsFixed(0)}%',
+                  label: '${Formatters.capitalize(zone.moistureCategory.name)} — ${zone.soilMoisture.toStringAsFixed(0)}%',
                   severity: _getMoistureSeverity(zone.moistureCategory),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -381,13 +381,13 @@ class FieldMapPainter extends CustomPainter {
       final cx = sumX / zone.boundaryPoints.length;
       final cy = sumY / zone.boundaryPoints.length;
       
-      final label = '${zone.name}\n${Formatters.capitalize(zone.moistureCategory.name)} · ${zone.currentMoisturePercent.toStringAsFixed(0)}%';
+      final label = '${zone.name}\n${Formatters.capitalize(zone.moistureCategory.name)} · ${zone.soilMoisture.toStringAsFixed(0)}%';
       final textSpan = TextSpan(
         text: label,
         style: AppTypography.caption.copyWith(
           color: AppColors.charcoalSoil,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          backgroundColor: AppColors.surfaceWhite.withOpacity(0.7),
+          backgroundColor: AppColors.surfaceWhite.withValues(alpha: 0.7),
         ),
       );
       final textPainter = TextPainter(
@@ -403,13 +403,13 @@ class FieldMapPainter extends CustomPainter {
   Color _getZoneFillColor(MoistureCategory category) {
     switch (category) {
       case MoistureCategory.veryLow:
-        return AppColors.criticalRed.withOpacity(0.3);
+        return AppColors.criticalRed.withValues(alpha: 0.3);
       case MoistureCategory.low:
-        return AppColors.warningAmber.withOpacity(0.3);
+        return AppColors.warningAmber.withValues(alpha: 0.3);
       case MoistureCategory.medium:
-        return Color.lerp(AppColors.warningAmber, AppColors.accentGreen, 0.5)!.withOpacity(0.2);
+        return Color.lerp(AppColors.warningAmber, AppColors.accentGreen, 0.5)!.withValues(alpha: 0.2);
       case MoistureCategory.high:
-        return AppColors.accentGreen.withOpacity(0.3);
+        return AppColors.accentGreen.withValues(alpha: 0.3);
     }
   }
 
@@ -493,7 +493,7 @@ class FieldMapPainter extends CustomPainter {
 
   void _drawScanCoverage(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.waterBlue.withOpacity(0.5)
+      ..color = AppColors.waterBlue.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
       
     for (final point in roverPath) {

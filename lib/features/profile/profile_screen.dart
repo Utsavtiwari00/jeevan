@@ -1,87 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:jeevan/core/routing/route_paths.dart';
 import 'package:jeevan/core/theme/app_colors.dart';
 import 'package:jeevan/core/theme/app_typography.dart';
 import 'package:jeevan/core/theme/app_spacing.dart';
-import 'package:jeevan/application/auth/auth_provider.dart';
-import 'package:jeevan/application/home/home_provider.dart';
-import 'package:jeevan/widgets/buttons/secondary_button.dart';
 import 'package:jeevan/widgets/layout/section_header.dart';
-import 'package:jeevan/widgets/skeleton/skeleton_composites.dart';
-import 'package:jeevan/widgets/states/error_state.dart';
 
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> {
   bool _useFahrenheit = false;
   bool _irrigationAlerts = true;
   bool _healthAlerts = true;
 
-  void _handleLogout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceWhite,
-        title: Text('Logout', style: AppTypography.headlineSmall),
-        content: Text('Are you sure you want to log out?', style: AppTypography.bodyMedium),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await ref.read(authControllerProvider.notifier).logout();
-              if (context.mounted) {
-                context.go(RoutePaths.login);
-              }
-            },
-            child: Text('Logout', style: AppTypography.labelLarge.copyWith(color: AppColors.criticalRed)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final userAsync = ref.watch(currentUserProvider);
-    final farmAsync = ref.watch(farmProvider);
+    const String userName = 'Utssav';
+    const String userEmail = 'utssav@greenvalley.farm';
+    const String userPhone = '+91 98765 43210';
+    const String farmName = 'Green Valley Farm';
+    const String farmLocation = 'Karnataka, India';
+    const String farmAcreage = '12.4 acres';
 
-    if (userAsync.isLoading || farmAsync.isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.paperBackground,
-        body: ProfileSkeleton(),
-      );
-    }
-
-    if (userAsync.hasError || farmAsync.hasError) {
-      return Scaffold(
-        backgroundColor: AppColors.paperBackground,
-        body: ErrorState(
-          message: userAsync.hasError ? userAsync.error.toString() : farmAsync.error.toString(),
-          onRetry: () {
-            ref.invalidate(currentUserProvider);
-            ref.invalidate(farmProvider);
-          },
-        ),
-      );
-    }
-
-    final user = userAsync.value;
-    final farm = farmAsync.value;
-
-    final initials = (user?.name ?? 'U').isNotEmpty 
-        ? (user?.name ?? 'U').trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
-        : '?';
+    final initials = userName.split(' ').map((e) => e[0]).take(2).join().toUpperCase();
 
     return Scaffold(
       backgroundColor: AppColors.paperBackground,
@@ -102,7 +46,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: AppColors.accentGreen.withOpacity(0.1),
+                    backgroundColor: AppColors.accentGreen.withValues(alpha: 0.1),
                     child: Text(
                       initials,
                       style: AppTypography.headlineMedium.copyWith(color: AppColors.accentGreen),
@@ -110,52 +54,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    user?.name ?? 'User',
+                    userName,
                     style: AppTypography.headlineSmall.copyWith(color: AppColors.charcoalSoil),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    user?.email ?? '',
+                    userEmail,
                     style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
                   ),
-                  if (user?.phone != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      user!.phone,
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-                    ),
-                  ]
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    userPhone,
+                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
 
             // Farm Info Section
-            if (farm != null) ...[
-              SectionHeader(title: 'Farm Information'),
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceWhite,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.divider),
-                ),
-                child: Column(
-                  children: [
-                    _buildInfoRow('Farm Name', farm.name),
-                    const Divider(color: AppColors.divider, height: AppSpacing.lg),
-                    _buildInfoRow('Location', farm.location),
-                    const Divider(color: AppColors.divider, height: AppSpacing.lg),
-                    _buildInfoRow('Acreage', '${farm.areaAcres} acres'),
-                  ],
-                ),
+            const SectionHeader(title: 'Farm Information'),
+            const SizedBox(height: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceWhite,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.divider),
               ),
-              const SizedBox(height: AppSpacing.xxl),
-            ],
+              child: Column(
+                children: [
+                  _buildInfoRow('Farm Name', farmName),
+                  const Divider(color: AppColors.divider, height: AppSpacing.lg),
+                  _buildInfoRow('Location', farmLocation),
+                  const Divider(color: AppColors.divider, height: AppSpacing.lg),
+                  _buildInfoRow('Acreage', farmAcreage),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
 
             // Settings Section
-            SectionHeader(title: 'Settings'),
+            const SectionHeader(title: 'Settings'),
             const SizedBox(height: AppSpacing.md),
             Container(
               decoration: BoxDecoration(
@@ -169,21 +109,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     title: Text('Temperature Units', style: AppTypography.bodyLarge),
                     subtitle: Text(_useFahrenheit ? 'Fahrenheit (°F)' : 'Celsius (°C)', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
                     value: _useFahrenheit,
-                    activeColor: AppColors.accentGreen,
+                    activeThumbColor: AppColors.accentGreen,
                     onChanged: (val) => setState(() => _useFahrenheit = val),
                   ),
                   const Divider(color: AppColors.divider, height: 1),
                   SwitchListTile(
                     title: Text('Irrigation Alerts', style: AppTypography.bodyLarge),
                     value: _irrigationAlerts,
-                    activeColor: AppColors.accentGreen,
+                    activeThumbColor: AppColors.accentGreen,
                     onChanged: (val) => setState(() => _irrigationAlerts = val),
                   ),
                   const Divider(color: AppColors.divider, height: 1),
                   SwitchListTile(
                     title: Text('Health Alerts', style: AppTypography.bodyLarge),
                     value: _healthAlerts,
-                    activeColor: AppColors.accentGreen,
+                    activeThumbColor: AppColors.accentGreen,
                     onChanged: (val) => setState(() => _healthAlerts = val),
                   ),
                 ],
@@ -192,7 +132,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: AppSpacing.xxl),
 
             // Rover Info
-            SectionHeader(title: 'Equipment'),
+            const SectionHeader(title: 'Equipment'),
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -210,12 +150,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
-
-            SecondaryButton(
-              label: 'Logout',
-              onPressed: _handleLogout,
-            ),
-            const SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),

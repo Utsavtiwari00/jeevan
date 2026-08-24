@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:jeevan/domain/models/farm.dart';
 import 'package:jeevan/domain/models/zone.dart';
-import 'package:jeevan/domain/repositories/farm_repository.dart';
+import 'package:jeevan/domain/models/sensor_data.dart';
+import 'package:jeevan/domain/models/tank_data.dart';
 import 'package:jeevan/domain/repositories/zone_repository.dart';
 import 'package:jeevan/domain/repositories/sensor_repository.dart';
-import 'package:jeevan/data/mock/mock_farm_repository.dart';
 import 'package:jeevan/data/mock/mock_zone_repository.dart';
-import 'package:jeevan/data/mock/mock_sensor_repository.dart';
+import 'package:jeevan/data/firebase/firebase_sensor_repository.dart';
 
 class AlertData {
   final String title;
@@ -36,26 +35,27 @@ class FarmOverview {
   });
 }
 
-final farmRepositoryProvider = Provider<FarmRepository>((ref) {
-  return MockFarmRepository();
-});
-
 final zoneRepositoryProvider = Provider<ZoneRepository>((ref) {
   return MockZoneRepository();
 });
 
 final sensorRepositoryProvider = Provider<SensorRepository>((ref) {
-  return MockSensorRepository();
+  return FirebaseSensorRepository();
 });
 
-final farmProvider = FutureProvider<Farm>((ref) async {
-  final repo = ref.watch(farmRepositoryProvider);
-  return repo.getFarm('farm-001');
+final homeSensorDataProvider = StreamProvider<SensorData>((ref) {
+  final repo = ref.watch(sensorRepositoryProvider);
+  return repo.watchSensorData();
+});
+
+final homeTankDataProvider = StreamProvider<TankData>((ref) {
+  final repo = ref.watch(sensorRepositoryProvider);
+  return repo.watchTankData();
 });
 
 final zonesProvider = FutureProvider<List<Zone>>((ref) async {
   final repo = ref.watch(zoneRepositoryProvider);
-  return repo.getZones('farm-001');
+  return repo.getZones();
 });
 
 final homeAlertsProvider = FutureProvider<List<AlertData>>((ref) async {
@@ -68,12 +68,12 @@ final homeAlertsProvider = FutureProvider<List<AlertData>>((ref) async {
     if (zone.status == ZoneStatus.irrigationRecommended) {
       lowMoistureZones.add(zone.name);
     }
-    if (zone.name == 'Zone A') {
-      alerts.add(const AlertData(
+    if (zone.hasDiseaseDetected) {
+      alerts.add(AlertData(
         title: 'Crop Health Alert',
-        subtitle: 'Possible early blight detected in Zone A (73% confidence)',
+        subtitle: '${zone.disease} detected in ${zone.name} (${zone.diseaseConfidence}% confidence)',
         severity: 'critical',
-        actionRoute: '/field/zone/zone-a/crop-analysis',
+        actionRoute: '/field/zone/${zone.id}/crop-analysis',
       ));
     }
   }
@@ -98,19 +98,18 @@ final homeAlertsProvider = FutureProvider<List<AlertData>>((ref) async {
 });
 
 final farmOverviewProvider = FutureProvider<FarmOverview>((ref) async {
-  final farm = await ref.watch(farmProvider.future);
   final zones = await ref.watch(zonesProvider.future);
   
   double totalMoisture = 0;
   for (final zone in zones) {
-    totalMoisture += zone.currentMoisturePercent;
+    totalMoisture += zone.soilMoisture;
   }
   
   final averageMoisture = zones.isEmpty ? 0.0 : totalMoisture / zones.length;
   
   return FarmOverview(
-    totalAcreage: farm.areaAcres,
-    activeZones: farm.zoneCount,
+    totalAcreage: 12.4,
+    activeZones: zones.length,
     averageMoisture: averageMoisture,
     waterUsedToday: 420.5,
   );

@@ -1,3 +1,6 @@
+/// Simplified Rover model matching Firebase `rover/` structure.
+///
+/// Since there is only one rover, this is treated as a singleton in the app.
 enum RoverStatus { idle, scanning, paused, returning, charging, offline }
 
 extension RoverStatusExtension on RoverStatus {
@@ -27,70 +30,61 @@ extension ConnectionStatusExtension on ConnectionStatus {
 
 class Rover {
   final String id;
-  final double batteryPercent;
-  final double latitude;
-  final double longitude;
   final RoverStatus status;
-  final String? currentZoneId;
-  final ConnectionStatus connectionStatus;
-  final DateTime lastSync;
+  final String currentZone;
+  final ConnectionStatus connection;
 
   const Rover({
     required this.id,
-    required this.batteryPercent,
-    required this.latitude,
-    required this.longitude,
     required this.status,
-    this.currentZoneId,
-    required this.connectionStatus,
-    required this.lastSync,
+    required this.currentZone,
+    required this.connection,
   });
 
   Rover copyWith({
     String? id,
-    double? batteryPercent,
-    double? latitude,
-    double? longitude,
     RoverStatus? status,
-    String? currentZoneId,
-    ConnectionStatus? connectionStatus,
-    DateTime? lastSync,
+    String? currentZone,
+    ConnectionStatus? connection,
   }) {
     return Rover(
       id: id ?? this.id,
-      batteryPercent: batteryPercent ?? this.batteryPercent,
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
       status: status ?? this.status,
-      currentZoneId: currentZoneId ?? this.currentZoneId,
-      connectionStatus: connectionStatus ?? this.connectionStatus,
-      lastSync: lastSync ?? this.lastSync,
+      currentZone: currentZone ?? this.currentZone,
+      connection: connection ?? this.connection,
     );
   }
 
-  factory Rover.fromJson(Map<String, dynamic> json) {
+  /// Parse from Firebase Realtime Database snapshot value.
+  factory Rover.fromFirebase(Map<dynamic, dynamic> data) {
     return Rover(
-      id: json['id'] as String,
-      batteryPercent: (json['batteryPercent'] as num).toDouble(),
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      status: RoverStatus.values.firstWhere((e) => e.name == json['status']),
-      currentZoneId: json['currentZoneId'] as String?,
-      connectionStatus: ConnectionStatus.values.firstWhere((e) => e.name == json['connectionStatus']),
-      lastSync: DateTime.parse(json['lastSync'] as String),
+      id: (data['id'] as String?) ?? 'R-01',
+      status: _parseStatus((data['status'] as String?) ?? 'idle'),
+      currentZone: (data['currentZone'] as String?) ?? '',
+      connection: _parseConnection((data['connection'] as String?) ?? 'offline'),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'batteryPercent': batteryPercent,
-      'latitude': latitude,
-      'longitude': longitude,
       'status': status.name,
-      'currentZoneId': currentZoneId,
-      'connectionStatus': connectionStatus.name,
-      'lastSync': lastSync.toIso8601String(),
+      'currentZone': currentZone,
+      'connection': connection.name,
     };
+  }
+
+  static RoverStatus _parseStatus(String value) {
+    return RoverStatus.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => RoverStatus.offline,
+    );
+  }
+
+  static ConnectionStatus _parseConnection(String value) {
+    return ConnectionStatus.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => ConnectionStatus.offline,
+    );
   }
 }

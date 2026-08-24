@@ -5,6 +5,8 @@ import 'package:jeevan/core/theme/app_spacing.dart';
 import 'package:jeevan/core/theme/app_typography.dart';
 import 'package:intl/intl.dart';
 
+import 'package:jeevan/widgets/chat/formatted_chat_text.dart';
+
 /// Chat message bubble.
 class ChatBubble extends StatelessWidget {
   final String message;
@@ -43,9 +45,10 @@ class ChatBubble extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  message,
-                  style: AppTypography.bodyMedium.copyWith(
+                FormattedChatText(
+                  text: message,
+                  isUser: isUser,
+                  baseStyle: AppTypography.bodyMedium.copyWith(
                     color: isUser ? AppColors.surfaceWhite : AppColors.charcoalSoil,
                   ),
                 ),

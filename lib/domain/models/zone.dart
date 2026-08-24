@@ -1,3 +1,7 @@
+/// Simplified Zone model matching Firebase `zones/{zone-id}` structure.
+///
+/// Disease and sensor data are embedded directly in the zone node.
+/// `moistureCategory` and `status` are derived from `soilMoisture`.
 enum MoistureCategory { veryLow, low, medium, high }
 
 extension MoistureCategoryExtension on MoistureCategory {
@@ -32,76 +36,108 @@ extension ZoneStatusExtension on ZoneStatus {
 
 class Zone {
   final String id;
-  final String farmId;
   final String name;
+  final double soilMoisture;
+  final double rainIntensity;
+  final double temperature;
+  final double humidity;
+  final String disease;
+  final double diseaseConfidence;
+
+  /// Boundary points kept for field map rendering (from local seed data, not Firebase).
   final List<List<double>> boundaryPoints;
-  final String cropType;
-  final double currentMoisturePercent;
-  final MoistureCategory moistureCategory;
-  final ZoneStatus status;
 
   const Zone({
     required this.id,
-    required this.farmId,
     required this.name,
-    required this.boundaryPoints,
-    required this.cropType,
-    required this.currentMoisturePercent,
-    required this.moistureCategory,
-    required this.status,
+    required this.soilMoisture,
+    required this.rainIntensity,
+    required this.temperature,
+    required this.humidity,
+    required this.disease,
+    required this.diseaseConfidence,
+    this.boundaryPoints = const [],
   });
+
+  /// Derived from soilMoisture percentage.
+  MoistureCategory get moistureCategory {
+    if (soilMoisture < 25) return MoistureCategory.veryLow;
+    if (soilMoisture < 45) return MoistureCategory.low;
+    if (soilMoisture < 70) return MoistureCategory.medium;
+    return MoistureCategory.high;
+  }
+
+  /// Derived from soilMoisture and rain.
+  ZoneStatus get status {
+    if (soilMoisture >= 70) return ZoneStatus.noIrrigation;
+    if (soilMoisture < 30 && rainIntensity == 0) {
+      return ZoneStatus.irrigationRecommended;
+    }
+    return ZoneStatus.monitor;
+  }
+
+  /// Whether a disease has been detected (not "none").
+  bool get hasDiseaseDetected =>
+      disease.isNotEmpty &&
+      disease.toLowerCase() != 'none' &&
+      disease.toLowerCase() != 'healthy';
 
   Zone copyWith({
     String? id,
-    String? farmId,
     String? name,
+    double? soilMoisture,
+    double? rainIntensity,
+    double? temperature,
+    double? humidity,
+    String? disease,
+    double? diseaseConfidence,
     List<List<double>>? boundaryPoints,
-    String? cropType,
-    double? currentMoisturePercent,
-    MoistureCategory? moistureCategory,
-    ZoneStatus? status,
   }) {
     return Zone(
       id: id ?? this.id,
-      farmId: farmId ?? this.farmId,
       name: name ?? this.name,
+      soilMoisture: soilMoisture ?? this.soilMoisture,
+      rainIntensity: rainIntensity ?? this.rainIntensity,
+      temperature: temperature ?? this.temperature,
+      humidity: humidity ?? this.humidity,
+      disease: disease ?? this.disease,
+      diseaseConfidence: diseaseConfidence ?? this.diseaseConfidence,
       boundaryPoints: boundaryPoints ?? this.boundaryPoints,
-      cropType: cropType ?? this.cropType,
-      currentMoisturePercent: currentMoisturePercent ?? this.currentMoisturePercent,
-      moistureCategory: moistureCategory ?? this.moistureCategory,
-      status: status ?? this.status,
     );
   }
 
-  factory Zone.fromJson(Map<String, dynamic> json) {
+  /// Parse from Firebase Realtime Database snapshot value.
+  factory Zone.fromFirebase(String id, Map<dynamic, dynamic> data) {
     return Zone(
-      id: json['id'] as String,
-      farmId: json['farmId'] as String,
-      name: json['name'] as String,
-      boundaryPoints: (json['boundaryPoints'] as List)
-          .map((point) => (point as List).map((e) => (e as num).toDouble()).toList())
-          .toList(),
-      cropType: json['cropType'] as String,
-      currentMoisturePercent: (json['currentMoisturePercent'] as num).toDouble(),
-      moistureCategory: MoistureCategory.values.firstWhere(
-        (e) => e.name == json['moistureCategory'],
-      ),
-      status: ZoneStatus.values.firstWhere(
-        (e) => e.name == json['status'],
-      ),
+      id: id,
+      name: _formatZoneName(id),
+      soilMoisture: (data['soilMoisture'] as num?)?.toDouble() ?? 0,
+      rainIntensity: (data['rainIntensity'] as num?)?.toDouble() ?? 0,
+      temperature: (data['temperature'] as num?)?.toDouble() ?? 0,
+      humidity: (data['humidity'] as num?)?.toDouble() ?? 0,
+      disease: (data['disease'] as String?) ?? 'none',
+      diseaseConfidence:
+          (data['diseaseConfidence'] as num?)?.toDouble() ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'farmId': farmId,
-      'name': name,
-      'boundaryPoints': boundaryPoints,
-      'cropType': cropType,
-      'currentMoisturePercent': currentMoisturePercent,
-      'moistureCategory': moistureCategory.name,
-      'status': status.name,
+      'soilMoisture': soilMoisture,
+      'rainIntensity': rainIntensity,
+      'temperature': temperature,
+      'humidity': humidity,
+      'disease': disease,
+      'diseaseConfidence': diseaseConfidence,
     };
+  }
+
+  static String _formatZoneName(String id) {
+    // "zone-a" → "Zone A"
+    final parts = id.split('-');
+    if (parts.length == 2) {
+      return 'Zone ${parts[1].toUpperCase()}';
+    }
+    return id;
   }
 }

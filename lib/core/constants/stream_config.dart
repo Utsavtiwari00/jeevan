@@ -4,8 +4,8 @@
 /// 📍 EDIT YOUR MEDIAMTX WHEP STREAM URL HERE:
 /// ============================================================================
 /// MediaMTX serves WebRTC via the standard WHEP endpoint on port 8889:
-/// Format: 'http://<RPI_IP>:8889/<STREAM_NAME>/whep'
-/// Example: 'http://192.168.1.50:8889/cam/whep'
+/// Format: `http://{RPI_IP}:8889/{STREAM_NAME}/whep`
+/// Example: `http://192.168.1.50:8889/cam/whep`
 ///
 class StreamConfig {
   StreamConfig._();

@@ -5,12 +5,12 @@ import 'package:jeevan/core/routing/route_paths.dart';
 import 'package:jeevan/core/theme/app_colors.dart';
 import 'package:jeevan/core/theme/app_typography.dart';
 import 'package:jeevan/core/theme/app_spacing.dart';
+import 'package:jeevan/core/theme/app_radius.dart';
 import 'package:jeevan/core/utils/formatters.dart';
 import 'package:jeevan/application/home/home_provider.dart';
-import 'package:jeevan/application/auth/auth_provider.dart';
+import 'package:jeevan/data/mock/seed/mock_seed_data.dart';
 import 'package:jeevan/widgets/app_bar/jeevan_app_bar.dart';
 import 'package:jeevan/widgets/skeleton/skeleton_composites.dart';
-import 'package:jeevan/widgets/metrics/metric_row.dart';
 import 'package:jeevan/widgets/layout/section_header.dart';
 import 'package:jeevan/widgets/alerts/alert_banner.dart';
 import 'package:jeevan/widgets/status/status_badge.dart';
@@ -21,41 +21,42 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(currentUserProvider);
-    final farmAsync = ref.watch(farmProvider);
     final alertsAsync = ref.watch(homeAlertsProvider);
     final overviewAsync = ref.watch(farmOverviewProvider);
+    final sensorDataAsync = ref.watch(homeSensorDataProvider);
+    final tankDataAsync = ref.watch(homeTankDataProvider);
 
-    if (farmAsync.isLoading || alertsAsync.isLoading || overviewAsync.isLoading) {
+    if (alertsAsync.isLoading || overviewAsync.isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.paperBackground,
         body: HomeSkeleton(),
       );
     }
 
-    if (farmAsync.hasError) {
+    if (alertsAsync.hasError || overviewAsync.hasError) {
       return Scaffold(
         backgroundColor: AppColors.paperBackground,
         body: ErrorState(
-          message: farmAsync.error.toString(),
+          message: alertsAsync.hasError
+              ? alertsAsync.error.toString()
+              : overviewAsync.error.toString(),
           onRetry: () {
-            ref.invalidate(farmProvider);
             ref.invalidate(homeAlertsProvider);
             ref.invalidate(farmOverviewProvider);
+            ref.invalidate(homeSensorDataProvider);
+            ref.invalidate(homeTankDataProvider);
           },
         ),
       );
     }
 
-    final user = userAsync.value;
-    final farm = farmAsync.value!;
     final alerts = alertsAsync.value ?? [];
     final overview = overviewAsync.value!;
+    final sensorData = sensorDataAsync.value ?? MockSeedData.sensorData;
+    final tankData = tankDataAsync.value ?? MockSeedData.tankData;
 
-    String greeting = Formatters.greetingForTimeOfDay(DateTime.now());
-    if (user != null && user.name.isNotEmpty) {
-      greeting += ', ${user.name.split(' ').first}';
-    }
+    final greeting =
+        '${Formatters.greetingForTimeOfDay(DateTime.now())}, Utssav';
 
     return Scaffold(
       backgroundColor: AppColors.paperBackground,
@@ -65,7 +66,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             icon: Stack(
               children: [
-                const Icon(Icons.notifications),
+                const Icon(Icons.notifications_outlined),
                 if (alerts.isNotEmpty)
                   Positioned(
                     right: 0,
@@ -87,148 +88,300 @@ class HomeScreen extends ConsumerWidget {
             onPressed: () => context.push(RoutePaths.notifications),
           ),
           IconButton(
-            icon: const Icon(Icons.account_circle),
+            icon: const Icon(Icons.account_circle_outlined),
             onPressed: () => context.push(RoutePaths.profile),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // A. Greeting Section
+            // A. Header Greeting & Farm Identity
             Text(
               greeting,
-              style: AppTypography.headlineMedium.copyWith(color: AppColors.charcoalSoil),
+              style: AppTypography.headlineMedium
+                  .copyWith(color: AppColors.charcoalSoil),
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: 2),
             Text(
-              alerts.isEmpty 
-                  ? 'Your farm is looking stable today.' 
-                  : 'Attention needed on your farm.',
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+              'Green Valley Farm · 12.4 acres · 4 active zones',
+              style: AppTypography.bodySmall
+                  .copyWith(color: AppColors.textSecondary),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.lg),
 
-            // B. Farm Identity Block
-            Text(
-              farm.name,
-              style: AppTypography.headlineSmall.copyWith(color: AppColors.charcoalSoil),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${farm.areaAcres} acres · ${farm.zoneCount} zones · R-01 connected',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-
-            // C. Field Status Section
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceWhite,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.divider),
+            // B. Hero Live Rover Cam & AI Crop Scan Shortcut Card
+            InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              onTap: () => context.go(RoutePaths.rover),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.charcoalSoil,
+                      AppColors.charcoalSoil.withValues(alpha: 0.85),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGreen.withValues(alpha: 0.25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.videocam_rounded,
+                        color: AppColors.accentGreen,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Trackbot Live Cockpit',
+                                style: AppTypography.titleSmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.criticalRed,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'LIVE',
+                                  style: AppTypography.caption.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Stream live video & trigger AI crop diagnostics',
+                            style: AppTypography.caption.copyWith(
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.white60,
+                      size: 16,
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  MetricRow(
-                    icon: Icons.water_drop,
-                    label: 'Soil Moisture',
-                    value: '${overview.averageMoisture.toStringAsFixed(1)}%',
-                  ),
-                  const Divider(color: AppColors.divider, height: AppSpacing.lg),
-                  MetricRow(
-                    icon: Icons.opacity,
-                    label: 'Water Availability',
-                    value: '74%',
-                  ),
-                  const Divider(color: AppColors.divider, height: AppSpacing.lg),
-                  MetricRow(
-                    icon: Icons.cloud,
-                    label: 'Rain Status',
-                    value: alerts.any((a) => a.title.contains('Rain')) ? 'Detected' : 'None',
-                  ),
-                  const Divider(color: AppColors.divider, height: AppSpacing.lg),
-                  MetricRow(
-                    icon: Icons.precision_manufacturing,
-                    label: 'Rover Status',
-                    value: 'Scanning',
-                  ),
-                ],
-              ),
             ),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.lg),
 
-            // D. Alerts Section
-            SectionHeader(
-              title: 'Alerts',
+            // C. Live Rover Telemetry & Sensors (Direct Firebase RTDB Stream)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Rover Live Telemetry',
+                  style: AppTypography.titleLarge.copyWith(
+                    color: AppColors.charcoalSoil,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.accentGreen.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accentGreen,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'LIVE RTDB',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.accentGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTelemetryCard(
+                    icon: Icons.water_drop_outlined,
+                    iconColor: AppColors.waterBlue,
+                    title: 'Soil Moisture',
+                    value:
+                        '${sensorData.soilMoisture.toStringAsFixed(sensorData.soilMoisture.truncateToDouble() == sensorData.soilMoisture ? 0 : 1)}%',
+                    subtitle: 'Rover probe reading',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _buildTelemetryCard(
+                    icon: Icons.thermostat_outlined,
+                    iconColor: const Color(0xFFE65100),
+                    title: 'Temperature',
+                    value: '${sensorData.temperature.toStringAsFixed(1)}°C',
+                    subtitle: 'Ambient air sensor',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTelemetryCard(
+                    icon: Icons.air_rounded,
+                    iconColor: AppColors.accentGreen,
+                    title: 'Air Humidity',
+                    value:
+                        '${sensorData.humidity.toStringAsFixed(sensorData.humidity.truncateToDouble() == sensorData.humidity ? 0 : 1)}%',
+                    subtitle: 'Relative humidity',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _buildTelemetryCard(
+                    icon: sensorData.isRaining
+                        ? Icons.grain_rounded
+                        : Icons.cloud_outlined,
+                    iconColor: sensorData.isRaining
+                        ? AppColors.waterBlue
+                        : AppColors.warningAmber,
+                    title: 'Rain Status',
+                    value: sensorData.rainStatus,
+                    subtitle:
+                        '${sensorData.rainIntensity.toStringAsFixed(0)} mm/h intensity',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTelemetryCard(
+                    icon: Icons.sanitizer_outlined,
+                    iconColor: AppColors.accentGreen,
+                    title: 'Pesticide Level',
+                    value: '${tankData.pesticideLevel.toStringAsFixed(0)}%',
+                    subtitle: 'Spray tank capacity',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _buildTelemetryCard(
+                    icon: Icons.precision_manufacturing_outlined,
+                    iconColor: AppColors.charcoalSoil,
+                    title: 'Trackbot R-01',
+                    value: 'Connected',
+                    subtitle: 'IMX219 Cam Ready',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // D. Priority Alerts Section
+            const SectionHeader(title: 'Farm Alerts'),
+            const SizedBox(height: AppSpacing.sm),
             if (alerts.isEmpty)
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceWhite,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   border: Border.all(color: AppColors.divider),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline, color: AppColors.accentGreen),
+                    const Icon(Icons.check_circle_outline,
+                        color: AppColors.accentGreen),
                     const SizedBox(width: AppSpacing.md),
-                    Text('All clear', style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                    Text(
+                      'All systems clear · No urgent issues',
+                      style: AppTypography.bodyMedium
+                          .copyWith(color: AppColors.textSecondary),
+                    ),
                   ],
                 ),
               )
             else
-              ...alerts.map((alert) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: AlertBanner(
-                  title: alert.title,
-                  subtitle: alert.subtitle,
-                  severity: alert.severity == 'critical' ? StatusBadgeSeverity.critical : StatusBadgeSeverity.warning,
-                  onAction: () => context.push(alert.actionRoute),
-                  actionLabel: alert.severity == 'critical' ? 'View analysis' : 'View field',
+              ...alerts.map(
+                (alert) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: AlertBanner(
+                    title: alert.title,
+                    subtitle: alert.subtitle,
+                    severity: alert.severity == 'critical'
+                        ? StatusBadgeSeverity.critical
+                        : StatusBadgeSeverity.warning,
+                    onAction: () => context.push(alert.actionRoute),
+                    actionLabel: alert.severity == 'critical'
+                        ? 'View analysis'
+                        : 'View field',
+                  ),
                 ),
-              )),
-            const SizedBox(height: AppSpacing.xxl),
-
-            // E. Farm Overview Section
-            const SectionHeader(
-              title: 'Farm Overview',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceWhite,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.divider),
               ),
-              child: Column(
-                children: [
-                  MetricRow(
-                    icon: Icons.landscape,
-                    label: 'Total Acreage',
-                    value: '${overview.totalAcreage}',
-                  ),
-                  const Divider(color: AppColors.divider, height: AppSpacing.lg),
-                  MetricRow(
-                    icon: Icons.grid_view,
-                    label: 'Active Zones',
-                    value: '${overview.activeZones}',
-                  ),
-                  const Divider(color: AppColors.divider, height: AppSpacing.lg),
-                  MetricRow(
-                    icon: Icons.local_drink,
-                    label: 'Water Used Today',
-                    value: '${overview.waterUsedToday}',
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: AppSpacing.xxl),
           ],
         ),
@@ -239,8 +392,61 @@ class HomeScreen extends ConsumerWidget {
         foregroundColor: AppColors.surfaceWhite,
         elevation: 3,
         shape: const CircleBorder(),
-        tooltip: 'Ask Jeevan',
+        tooltip: 'Ask Jeevan AI',
         child: const Icon(Icons.chat_bubble_outline, size: 24),
+      ),
+    );
+  }
+
+  Widget _buildTelemetryCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String value,
+    required String subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, color: iconColor, size: 22),
+              Text(
+                value,
+                style: AppTypography.titleLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.charcoalSoil,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            title,
+            style: AppTypography.bodySmall.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.charcoalSoil,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textTertiary,
+              fontSize: 10,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

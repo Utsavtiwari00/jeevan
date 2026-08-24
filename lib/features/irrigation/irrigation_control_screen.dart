@@ -125,7 +125,7 @@ class IrrigationControlScreen extends ConsumerWidget {
               children: [
                 Text(zone.name, style: AppTypography.headlineSmall),
                 Text(
-                  '${zone.moistureCategory.label} · ${zone.currentMoisturePercent.toInt()}%',
+                  '${zone.moistureCategory.label} · ${zone.soilMoisture.toInt()}%',
                   style: AppTypography.bodyMedium.copyWith(
                     color: needsIrrigation ? AppColors.warningAmber : AppColors.textSecondary,
                   ),
@@ -134,7 +134,7 @@ class IrrigationControlScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              needsIrrigation ? 'Est. $duration min · ~$liters\L' : 'No irrigation needed',
+              needsIrrigation ? 'Est. $duration min · ~$liters L' : 'No irrigation needed',
               style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
           ],
@@ -169,7 +169,7 @@ class IrrigationControlScreen extends ConsumerWidget {
             children: [
               Text('Total Estimated Water', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
               const SizedBox(height: AppSpacing.xs),
-              Text('~$totalWater\L', style: AppTypography.headlineSmall),
+              Text('~$totalWater L', style: AppTypography.headlineSmall),
             ],
           ),
         ],
@@ -193,7 +193,7 @@ class IrrigationControlScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           _buildInfoRow(Icons.timer, 'Estimated $totalDuration minutes'),
           const SizedBox(height: AppSpacing.sm),
-          _buildInfoRow(Icons.water_drop, 'Estimated $totalWater\L'),
+          _buildInfoRow(Icons.water_drop, 'Estimated $totalWater L'),
           const SizedBox(height: AppSpacing.xl),
           Row(
             children: [

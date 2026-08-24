@@ -1,7 +1,64 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:jeevan/domain/models/crop_scan.dart';
+import 'package:jeevan/domain/models/crop_scan_result.dart';
+import 'package:jeevan/domain/models/zone.dart';
 import 'package:jeevan/domain/repositories/crop_scan_repository.dart';
-import 'package:jeevan/data/mock/mock_crop_scan_repository.dart';
+import 'package:jeevan/data/firebase/firebase_crop_scan_repository.dart';
+import 'package:jeevan/application/field/field_provider.dart' show zoneRepositoryProvider;
+
+/// Provider for the CropScanRepository accessing Firebase Realtime Database.
+final cropScanRepositoryProvider = Provider<CropScanRepository>((ref) {
+  return FirebaseCropScanRepository();
+});
+
+/// Real-time stream provider listening to `trackbot/scan/` in Firebase RTDB.
+final cropScanStreamProvider =
+    StreamProvider.autoDispose<CropScanResult>((ref) {
+  final repository = ref.watch(cropScanRepositoryProvider);
+  return repository.watchLatestScan();
+});
+
+/// Controller for initiating new crop scans and managing scan state.
+class CropScanController extends StateNotifier<AsyncValue<String?>> {
+  final Ref _ref;
+
+  CropScanController(this._ref) : super(const AsyncValue.data(null));
+
+  /// Requests a new crop scan on the Raspberry Pi via Firebase RTDB.
+  Future<void> triggerScan() async {
+    final currentScan = _ref.read(cropScanStreamProvider).asData?.value;
+    if (currentScan != null && currentScan.isProcessing) {
+      // Prevent multiple simultaneous scan requests
+      return;
+    }
+    if (state.isLoading) return;
+
+    state = const AsyncValue.loading();
+    try {
+      final repo = _ref.read(cropScanRepositoryProvider);
+      final reqId = await repo.requestScan();
+      state = AsyncValue.data(reqId);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  void resetState() {
+    state = const AsyncValue.data(null);
+  }
+}
+
+final cropScanControllerProvider =
+    StateNotifierProvider<CropScanController, AsyncValue<String?>>((ref) {
+  return CropScanController(ref);
+});
+
+// --- Legacy / Companion Zone data providers ---
+final zoneDiseaseProvider =
+    FutureProvider.family<Zone, String>((ref, zoneId) async {
+  final repo = ref.read(zoneRepositoryProvider);
+  return repo.getZone(zoneId);
+});
 
 enum AnalysisStage {
   idle,
@@ -13,32 +70,20 @@ enum AnalysisStage {
   complete,
 }
 
-final cropScanRepositoryProvider = Provider<CropScanRepository>((ref) {
-  return MockCropScanRepository();
-});
+final analysisStageProvider =
+    StateProvider<AnalysisStage>((ref) => AnalysisStage.idle);
 
-final latestCropScanProvider = FutureProvider.family<CropScan?, String>((ref, zoneId) async {
-  final repo = ref.read(cropScanRepositoryProvider);
-  return repo.getLatestScan(zoneId);
-});
-
-final cropScansForZoneProvider = FutureProvider.family<List<CropScan>, String>((ref, zoneId) async {
-  final repo = ref.read(cropScanRepositoryProvider);
-  return repo.getScansForZone(zoneId);
-});
-
-final analysisStageProvider = StateProvider<AnalysisStage>((ref) => AnalysisStage.idle);
-
-class CropAnalysisController extends AsyncNotifier<CropScan?> {
+class CropAnalysisController extends AsyncNotifier<void> {
   @override
-  Future<CropScan?> build() async {
-    return null;
-  }
+  Future<void> build() async {}
 
-  Future<CropScan?> submitScan(String zoneId, String imagePath) async {
+  Future<void> submitScan(String zoneId, String imagePath) async {
     state = const AsyncLoading();
+    try {
+      await ref.read(cropScanControllerProvider.notifier).triggerScan();
+    } catch (_) {}
     ref.read(analysisStageProvider.notifier).state = AnalysisStage.imageCaptured;
-    
+
     final stages = [
       AnalysisStage.identifyingPlant,
       AnalysisStage.examiningLeaves,
@@ -53,17 +98,12 @@ class CropAnalysisController extends AsyncNotifier<CropScan?> {
     }
 
     state = await AsyncValue.guard(() async {
-      final repo = ref.read(cropScanRepositoryProvider);
-      final scan = await repo.submitScan(zoneId, imagePath);
-      ref.invalidate(latestCropScanProvider(zoneId));
-      ref.invalidate(cropScansForZoneProvider(zoneId));
-      return scan;
+      ref.invalidate(zoneDiseaseProvider(zoneId));
     });
-    
-    return state.value;
   }
 }
 
-final cropAnalysisControllerProvider = AsyncNotifierProvider<CropAnalysisController, CropScan?>(() {
+final cropAnalysisControllerProvider =
+    AsyncNotifierProvider<CropAnalysisController, void>(() {
   return CropAnalysisController();
 });

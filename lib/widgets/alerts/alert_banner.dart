@@ -33,22 +33,22 @@ class AlertBanner extends StatelessWidget {
     switch (severity) {
       case StatusBadgeSeverity.critical:
         indicatorColor = AppColors.criticalRed;
-        backgroundColor = AppColors.criticalRedLight.withOpacity(0.5);
+        backgroundColor = AppColors.criticalRedLight.withValues(alpha: 0.5);
         severityLabel = 'Critical';
         break;
       case StatusBadgeSeverity.warning:
         indicatorColor = AppColors.warningAmber;
-        backgroundColor = AppColors.warningAmberLight.withOpacity(0.5);
+        backgroundColor = AppColors.warningAmberLight.withValues(alpha: 0.5);
         severityLabel = 'Warning';
         break;
       case StatusBadgeSeverity.info:
         indicatorColor = AppColors.waterBlue;
-        backgroundColor = AppColors.waterBlueLight.withOpacity(0.5);
+        backgroundColor = AppColors.waterBlueLight.withValues(alpha: 0.5);
         severityLabel = 'Info';
         break;
       case StatusBadgeSeverity.success:
         indicatorColor = AppColors.accentGreen;
-        backgroundColor = AppColors.accentGreenLight.withOpacity(0.5);
+        backgroundColor = AppColors.accentGreenLight.withValues(alpha: 0.5);
         severityLabel = 'Success';
         break;
       case StatusBadgeSeverity.neutral:

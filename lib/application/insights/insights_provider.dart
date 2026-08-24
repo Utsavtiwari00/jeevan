@@ -1,15 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jeevan/domain/repositories/sensor_repository.dart';
-import 'package:jeevan/domain/repositories/irrigation_repository.dart';
 import 'package:jeevan/data/mock/mock_sensor_repository.dart';
-import 'package:jeevan/data/mock/mock_irrigation_repository.dart';
+import 'package:jeevan/application/crop_health/crop_health_provider.dart';
 
 enum DateRange { today, week, month }
 
 class InsightItem {
   final String title;
   final String explanation;
-  final String severity; // e.g., 'info', 'warning', 'critical', 'success'
+  final String severity; // 'info', 'warning', 'critical', 'success'
   final String category; // 'soil', 'water', 'cropHealth', 'rover', 'weather'
 
   const InsightItem({
@@ -57,55 +56,85 @@ final sensorRepositoryProvider = Provider<SensorRepository>((ref) {
   return MockSensorRepository();
 });
 
-final irrigationRepositoryProvider = Provider<IrrigationRepository>((ref) {
-  return MockIrrigationRepository();
-});
-
 // State Providers
-final selectedDateRangeProvider = StateProvider<DateRange>((ref) => DateRange.week);
+final selectedDateRangeProvider =
+    StateProvider<DateRange>((ref) => DateRange.week);
 
-// Insights Provider
+// Dynamic Insights Provider incorporating live scan data
 final insightsProvider = FutureProvider<InsightsData>((ref) async {
-  // Simulate network delay
-  await Future.delayed(const Duration(milliseconds: 1200));
+  final scanAsync = ref.watch(cropScanStreamProvider);
+  final scan = scanAsync.asData?.value;
 
-  return const InsightsData(
-    soil: [
+  final List<InsightItem> cropHealthInsights = [];
+
+  if (scan != null && scan.isCompleted) {
+    if (scan.hasDisease) {
+      cropHealthInsights.add(
+        InsightItem(
+          title: '${scan.formattedDisease} detected on ${scan.formattedCrop}',
+          explanation:
+              'Trackbot camera AI identified ${scan.formattedDisease} with ${scan.formattedConfidence} confidence. Immediate organic or copper-based fungicide spray recommended.',
+          severity: scan.confidencePercentage > 75 ? 'critical' : 'warning',
+          category: 'cropHealth',
+        ),
+      );
+    } else {
+      cropHealthInsights.add(
+        InsightItem(
+          title: 'Healthy ${scan.formattedCrop} verified by Trackbot',
+          explanation:
+              'Latest camera scan confirmed clear foliage with ${scan.formattedConfidence} confidence. No pathogen markers found.',
+          severity: 'success',
+          category: 'cropHealth',
+        ),
+      );
+    }
+  } else {
+    cropHealthInsights.add(
+      const InsightItem(
+        title: 'Ready for Rover crop scan',
+        explanation:
+            'Trigger a scan from the Rover Cam tab to evaluate real-time plant health and disease indicators.',
+        severity: 'info',
+        category: 'cropHealth',
+      ),
+    );
+  }
+
+  return InsightsData(
+    soil: const [
       InsightItem(
         title: 'Zone A is drying faster than the rest of the field',
-        explanation: 'Moisture has fallen 14% faster than neighboring zones over the past 3 days. This may indicate higher sun exposure or soil drainage differences.',
+        explanation:
+            'Moisture has fallen 14% faster than neighboring zones over the past 3 days. This may indicate higher sun exposure or soil drainage differences.',
         severity: 'warning',
         category: 'soil',
       ),
     ],
-    water: [
+    water: const [
       InsightItem(
         title: 'Water usage is 18% below weekly average',
-        explanation: 'You\'ve used 3,620L this week compared to your 4-week average of 4,420L. Rain in Zone C likely contributed to reduced irrigation needs.',
+        explanation:
+            'You have used 3,620L this week compared to your 4-week average of 4,420L. Rain in Zone C contributed to reduced irrigation needs.',
         severity: 'info',
         category: 'water',
       ),
     ],
-    cropHealth: [
+    cropHealth: cropHealthInsights,
+    rover: const [
       InsightItem(
-        title: 'Possible early blight detected in Zone A',
-        explanation: 'A recent scan identified potential early blight symptoms with 73% confidence. Monitor closely and consider preventive measures.',
-        severity: 'warning',
-        category: 'cropHealth',
-      ),
-    ],
-    rover: [
-      InsightItem(
-        title: 'Rover R-01 has completed 3 full scans this week',
-        explanation: 'Coverage has been consistent. All four zones have been scanned at least once in the past 48 hours.',
-        severity: 'success', // or info, treating as success feel
+        title: 'Trackbot camera connected and streaming',
+        explanation:
+            'MediaMTX WebRTC stream is operational at /cam/whep. Ready for automated plant inspections.',
+        severity: 'success',
         category: 'rover',
       ),
     ],
-    weather: [
+    weather: const [
       InsightItem(
         title: 'Light rain expected tomorrow afternoon',
-        explanation: 'Based on regional forecasts, light rain is expected between 2-5 PM. Consider delaying irrigation for Zone B until after the rain.',
+        explanation:
+            'Based on regional forecasts, light rain is expected between 2-5 PM. Consider delaying irrigation for Zone B until after the rain.',
         severity: 'info',
         category: 'weather',
       ),
@@ -114,9 +143,10 @@ final insightsProvider = FutureProvider<InsightsData>((ref) async {
 });
 
 // Historical Data Provider
-final historicalDataProvider = FutureProvider.family<HistoricalData, DateRange>((ref, range) async {
-  await Future.delayed(const Duration(milliseconds: 800));
-  
+final historicalDataProvider =
+    FutureProvider.family<HistoricalData, DateRange>((ref, range) async {
+  await Future.delayed(const Duration(milliseconds: 400));
+
   switch (range) {
     case DateRange.today:
       return const HistoricalData(

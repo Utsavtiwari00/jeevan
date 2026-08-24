@@ -1,0 +1,52 @@
+{
+  "rover": {
+    "id": "R-01",
+    "status": "scanning",
+    "currentZone": "zone-b",
+    "connection": "strong"
+  },
+  "sensors": {
+    "soilMoisture": 42,
+    "rainIntensity": 0,
+    "rainStatus": false,
+    "temperature": 28.4,
+    "humidity": 54
+  },
+  "tanks": {
+    "pesticideLevel": 74
+  },
+  "zones": {
+    "zone-a": {
+      "soilMoisture": 22,
+      "rainIntensity": 0,
+      "temperature": 28.4,
+      "humidity": 54,
+      "disease": "Possible Early Blight",
+      "diseaseConfidence": 73
+    },
+    "zone-b": {
+      "soilMoisture": 48,
+      "rainIntensity": 0,
+      "temperature": 27.2,
+      "humidity": 60,
+      "disease": "none",
+      "diseaseConfidence": 0
+    },
+    "zone-c": {
+      "soilMoisture": 81,
+      "rainIntensity": 12,
+      "temperature": 26.9,
+      "humidity": 71,
+      "disease": "none",
+      "diseaseConfidence": 0
+    },
+    "zone-d": {
+      "soilMoisture": 19,
+      "rainIntensity": 0,
+      "temperature": 29.1,
+      "humidity": 49,
+      "disease": "none",
+      "diseaseConfidence": 0
+    }
+  }
+}

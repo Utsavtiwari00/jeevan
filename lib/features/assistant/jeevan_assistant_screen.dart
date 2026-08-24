@@ -8,6 +8,7 @@ import 'package:jeevan/application/chat/chat_provider.dart';
 import 'package:jeevan/domain/models/chat_message.dart';
 import 'package:jeevan/widgets/app_bar/jeevan_app_bar.dart';
 import 'package:jeevan/widgets/skeleton/skeleton_composites.dart';
+import 'package:jeevan/widgets/chat/formatted_chat_text.dart';
 
 class JeevanAssistantScreen extends ConsumerStatefulWidget {
   final bool isPushedRoute;
@@ -128,7 +129,7 @@ class _JeevanAssistantScreenState extends ConsumerState<JeevanAssistantScreen> {
                 );
               },
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (e, st) => const SizedBox.shrink(),
             ),
             
             // Input Area
@@ -227,9 +228,10 @@ class _ChatBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        message.text,
-                        style: TextStyle(
+                      FormattedChatText(
+                        text: message.text,
+                        isUser: isUser,
+                        baseStyle: TextStyle(
                           color: isUser ? AppColors.surfaceWhite : AppColors.charcoalSoil,
                           fontSize: 15,
                           height: 1.4,

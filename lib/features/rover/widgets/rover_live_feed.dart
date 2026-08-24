@@ -366,35 +366,112 @@ class _RoverLiveFeedState extends ConsumerState<RoverLiveFeed> {
                   style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                RadioListTile<StreamProtocol>(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Native WebRTC (WHEP)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Direct hardware-decoded WebRTC stream', style: TextStyle(fontSize: 11)),
-                  value: StreamProtocol.webrtcWhep,
-                  groupValue: _protocol,
-                  activeColor: AppColors.accentGreen,
-                  onChanged: (val) {
-                    if (val != null) {
-                      setDialogState(() => _protocol = val);
-                      setState(() => _protocol = val);
-                    }
+                InkWell(
+                  onTap: () {
+                    setDialogState(() => _protocol = StreamProtocol.webrtcWhep);
+                    setState(() => _protocol = StreamProtocol.webrtcWhep);
                   },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: _protocol == StreamProtocol.webrtcWhep
+                          ? AppColors.accentGreenLight
+                          : AppColors.surfaceWhite,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _protocol == StreamProtocol.webrtcWhep
+                            ? AppColors.accentGreen
+                            : AppColors.divider,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _protocol == StreamProtocol.webrtcWhep
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: _protocol == StreamProtocol.webrtcWhep
+                              ? AppColors.accentGreen
+                              : AppColors.textTertiary,
+                          size: 18,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Native WebRTC (WHEP)',
+                                style: TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                'Direct hardware-decoded WebRTC stream',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                RadioListTile<StreamProtocol>(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('In-App Browser Mode', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Renders identical view to phone browser', style: TextStyle(fontSize: 11)),
-                  value: StreamProtocol.webBrowser,
-                  groupValue: _protocol,
-                  activeColor: AppColors.accentGreen,
-                  onChanged: (val) {
-                    if (val != null) {
-                      setDialogState(() => _protocol = val);
-                      setState(() => _protocol = val);
-                    }
+                const SizedBox(height: AppSpacing.xs),
+                InkWell(
+                  onTap: () {
+                    setDialogState(() => _protocol = StreamProtocol.webBrowser);
+                    setState(() => _protocol = StreamProtocol.webBrowser);
                   },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: _protocol == StreamProtocol.webBrowser
+                          ? AppColors.accentGreenLight
+                          : AppColors.surfaceWhite,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _protocol == StreamProtocol.webBrowser
+                            ? AppColors.accentGreen
+                            : AppColors.divider,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _protocol == StreamProtocol.webBrowser
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: _protocol == StreamProtocol.webBrowser
+                              ? AppColors.accentGreen
+                              : AppColors.textTertiary,
+                          size: 18,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'In-App Browser Mode',
+                                style: TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                'Renders identical view to phone browser',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -613,7 +690,7 @@ class _RoverLiveFeedState extends ConsumerState<RoverLiveFeed> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Ensure phone & RPi are on the same Wi-Fi.',
+                                _errorMessage ?? 'Ensure phone & RPi are on the same Wi-Fi.',
                                 style: AppTypography.caption.copyWith(color: Colors.white60, fontSize: 11),
                                 textAlign: TextAlign.center,
                               ),

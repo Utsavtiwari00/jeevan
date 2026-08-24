@@ -1,6 +1,9 @@
-import '../models/sensor_reading.dart';
+import 'package:jeevan/domain/models/sensor_data.dart';
+import 'package:jeevan/domain/models/tank_data.dart';
 
 abstract class SensorRepository {
-  Future<SensorReading> getLatestReading(String zoneId);
-  Future<List<SensorReading>> getReadingsForZone(String zoneId, {DateTime? from, DateTime? to});
+  Future<SensorData> getSensorData();
+  Future<TankData> getTankData();
+  Stream<SensorData> watchSensorData();
+  Stream<TankData> watchTankData();
 }

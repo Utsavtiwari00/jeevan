@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import 'package:jeevan/application/irrigation/irrigation_provider.dart';
 import 'package:jeevan/core/theme/app_colors.dart';
 import 'package:jeevan/core/theme/app_spacing.dart';
 import 'package:jeevan/core/theme/app_typography.dart';
-import 'package:jeevan/domain/models/irrigation_event.dart';
-import 'package:jeevan/domain/repositories/irrigation_repository.dart';
 import 'package:jeevan/widgets/app_bar/jeevan_app_bar.dart';
 import 'package:jeevan/widgets/layout/section_header.dart';
 import 'package:jeevan/widgets/skeleton/skeleton_composites.dart';
@@ -112,7 +109,7 @@ class WaterUsageScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildChart(List<DailyWaterUsage> usageData) {
+  Widget _buildChart(dynamic usageData) {
     final staticValues = [850.0, 620.0, 0.0, 780.0, 920.0, 450.0, 0.0];
     final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -213,8 +210,13 @@ class WaterUsageScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEventLog(List<IrrigationEvent> history) {
-    if (history.isEmpty) {
+  Widget _buildEventLog(dynamic history) {
+    List<Map<String, dynamic>> events = [];
+    if (history is List) {
+      events = history.cast<Map<String, dynamic>>();
+    }
+
+    if (events.isEmpty) {
       return const EmptyState(
         icon: Icons.history,
         title: 'No History',
@@ -222,12 +224,8 @@ class WaterUsageScreen extends ConsumerWidget {
       );
     }
 
-    // Sort by recent first
-    final sortedHistory = List<IrrigationEvent>.from(history)
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
     return Column(
-      children: sortedHistory.map((event) {
+      children: events.map((event) {
         return Container(
           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.sm),
@@ -241,12 +239,12 @@ class WaterUsageScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Zone ${event.zoneId.split('-').last.toUpperCase()}',
+                    'Zone ${event['zone'] ?? ''}',
                     style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '${DateFormat('MMM d, HH:mm').format(event.timestamp)} · ${event.triggeredBy.name}',
+                    '${event['timestamp'] ?? ''} · ${event['trigger'] ?? ''}',
                     style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
                   ),
                 ],
@@ -254,10 +252,10 @@ class WaterUsageScreen extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${event.waterUsedLiters.toInt()}L', style: AppTypography.bodyLarge),
+                  Text('${event['waterUsed'] ?? 0}L', style: AppTypography.bodyLarge),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '${event.durationMinutes} min',
+                    '${event['duration'] ?? 0} min',
                     style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
                   ),
                 ],

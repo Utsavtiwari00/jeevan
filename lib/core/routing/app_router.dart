@@ -3,17 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:jeevan/core/routing/route_paths.dart';
 import 'package:jeevan/core/theme/app_colors.dart';
 import 'package:jeevan/features/splash/splash_screen.dart';
-import 'package:jeevan/features/auth/login_screen.dart';
-import 'package:jeevan/features/auth/signup_screen.dart';
-import 'package:jeevan/features/auth/otp_screen.dart';
-import 'package:jeevan/features/auth/forgot_password_screen.dart';
+import 'package:jeevan/features/onboarding/onboarding_screen.dart';
 import 'package:jeevan/features/home/home_screen.dart';
 import 'package:jeevan/features/field/field_map_screen.dart';
 import 'package:jeevan/features/field/zone_detail_screen.dart';
 import 'package:jeevan/features/crop_health/crop_analysis_screen.dart';
-import 'package:jeevan/features/crop_health/scan_crop_screen.dart';
 import 'package:jeevan/features/rover/rover_overview_screen.dart';
-import 'package:jeevan/features/rover/rover_mission_screen.dart';
 import 'package:jeevan/features/irrigation/irrigation_control_screen.dart';
 import 'package:jeevan/features/irrigation/water_usage_screen.dart';
 import 'package:jeevan/features/insights/insights_screen.dart';
@@ -40,20 +35,8 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const SplashScreen(),
     ),
     GoRoute(
-      path: RoutePaths.login,
-      builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: RoutePaths.signup,
-      builder: (context, state) => const SignupScreen(),
-    ),
-    GoRoute(
-      path: RoutePaths.otp,
-      builder: (context, state) => const OtpScreen(),
-    ),
-    GoRoute(
-      path: RoutePaths.forgotPassword,
-      builder: (context, state) => const ForgotPasswordScreen(),
+      path: RoutePaths.onboarding,
+      builder: (context, state) => const OnboardingScreen(),
     ),
 
     // --- Main App Shell (bottom nav) ---
@@ -64,7 +47,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
       branches: [
-        // Home tab
+        // 1. Home tab
         StatefulShellBranch(
           navigatorKey: _homeNavigatorKey,
           routes: [
@@ -84,7 +67,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Field tab
+        // 2. Field tab
         StatefulShellBranch(
           navigatorKey: _fieldNavigatorKey,
           routes: [
@@ -112,23 +95,17 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Rover tab
+        // 3. Rover Cam & Scan tab
         StatefulShellBranch(
           navigatorKey: _roverNavigatorKey,
           routes: [
             GoRoute(
               path: RoutePaths.rover,
               builder: (context, state) => const RoverOverviewScreen(),
-              routes: [
-                GoRoute(
-                  path: 'mission',
-                  builder: (context, state) => const RoverMissionScreen(),
-                ),
-              ],
             ),
           ],
         ),
-        // Insights tab
+        // 4. Insights tab
         StatefulShellBranch(
           navigatorKey: _insightsNavigatorKey,
           routes: [
@@ -159,11 +136,6 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
-      path: RoutePaths.scanCrop,
-      builder: (context, state) => const ScanCropScreen(),
-    ),
-    GoRoute(
-      parentNavigatorKey: _rootNavigatorKey,
       path: RoutePaths.irrigation,
       builder: (context, state) => const IrrigationControlScreen(),
     ),
@@ -186,7 +158,7 @@ class _ScaffoldWithNavBar extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border(
             top: BorderSide(
               color: AppColors.divider,
@@ -208,25 +180,29 @@ class _ScaffoldWithNavBar extends StatelessWidget {
           elevation: 0,
           height: 64,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: [
+          destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined, color: AppColors.textTertiary),
-              selectedIcon: Icon(Icons.home_rounded, color: AppColors.accentGreen),
+              selectedIcon:
+                  Icon(Icons.home_rounded, color: AppColors.accentGreen),
               label: 'Home',
             ),
             NavigationDestination(
               icon: Icon(Icons.map_outlined, color: AppColors.textTertiary),
-              selectedIcon: Icon(Icons.map_rounded, color: AppColors.accentGreen),
+              selectedIcon:
+                  Icon(Icons.map_rounded, color: AppColors.accentGreen),
               label: 'Field',
             ),
             NavigationDestination(
-              icon: Icon(Icons.precision_manufacturing_outlined, color: AppColors.textTertiary),
-              selectedIcon: Icon(Icons.precision_manufacturing_rounded, color: AppColors.accentGreen),
-              label: 'Rover',
+              icon: Icon(Icons.videocam_outlined, color: AppColors.textTertiary),
+              selectedIcon:
+                  Icon(Icons.videocam_rounded, color: AppColors.accentGreen),
+              label: 'Rover Cam',
             ),
             NavigationDestination(
               icon: Icon(Icons.insights_outlined, color: AppColors.textTertiary),
-              selectedIcon: Icon(Icons.insights_rounded, color: AppColors.accentGreen),
+              selectedIcon:
+                  Icon(Icons.insights_rounded, color: AppColors.accentGreen),
               label: 'Insights',
             ),
           ],

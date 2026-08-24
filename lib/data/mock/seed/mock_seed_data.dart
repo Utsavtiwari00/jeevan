@@ -1,33 +1,20 @@
-import 'package:jeevan/domain/models/farm.dart';
 import 'package:jeevan/domain/models/zone.dart';
-import 'package:jeevan/domain/models/sensor_reading.dart';
 import 'package:jeevan/domain/models/rover.dart';
-import 'package:jeevan/domain/models/rover_mission.dart';
-import 'package:jeevan/domain/models/crop_scan.dart';
-import 'package:jeevan/domain/models/irrigation_event.dart';
+import 'package:jeevan/domain/models/sensor_data.dart';
+import 'package:jeevan/domain/models/tank_data.dart';
 import 'package:jeevan/domain/models/notification_item.dart';
-import 'package:jeevan/domain/models/app_user.dart';
 
 class MockSeedData {
-  static final Farm farm = Farm(
-    id: 'farm-001',
-    name: 'Green Valley Farm',
-    location: 'Karnataka, India',
-    areaAcres: 12.4,
-    zoneCount: 4,
-    roverConnected: true,
-    createdAt: DateTime(2024, 1, 15),
-  );
-
   static final List<Zone> zones = [
     Zone(
       id: 'zone-a',
-      farmId: 'farm-001',
       name: 'Zone A',
-      currentMoisturePercent: 22,
-      moistureCategory: MoistureCategory.veryLow,
-      status: ZoneStatus.irrigationRecommended,
-      cropType: 'Wheat',
+      soilMoisture: 22,
+      rainIntensity: 0,
+      temperature: 28.4,
+      humidity: 54,
+      disease: 'Possible Early Blight',
+      diseaseConfidence: 73,
       boundaryPoints: const [
         [0.05, 0.08],
         [0.48, 0.05],
@@ -38,12 +25,13 @@ class MockSeedData {
     ),
     Zone(
       id: 'zone-b',
-      farmId: 'farm-001',
       name: 'Zone B',
-      currentMoisturePercent: 48,
-      moistureCategory: MoistureCategory.medium,
-      status: ZoneStatus.monitor,
-      cropType: 'Rice',
+      soilMoisture: 48,
+      rainIntensity: 0,
+      temperature: 27.2,
+      humidity: 60,
+      disease: 'none',
+      diseaseConfidence: 0,
       boundaryPoints: const [
         [0.48, 0.05],
         [0.92, 0.10],
@@ -53,12 +41,13 @@ class MockSeedData {
     ),
     Zone(
       id: 'zone-c',
-      farmId: 'farm-001',
       name: 'Zone C',
-      currentMoisturePercent: 81,
-      moistureCategory: MoistureCategory.high,
-      status: ZoneStatus.noIrrigation,
-      cropType: 'Sugarcane',
+      soilMoisture: 81,
+      rainIntensity: 12,
+      temperature: 26.9,
+      humidity: 71,
+      disease: 'none',
+      diseaseConfidence: 0,
       boundaryPoints: const [
         [0.52, 0.35],
         [0.95, 0.38],
@@ -69,12 +58,13 @@ class MockSeedData {
     ),
     Zone(
       id: 'zone-d',
-      farmId: 'farm-001',
       name: 'Zone D',
-      currentMoisturePercent: 19,
-      moistureCategory: MoistureCategory.veryLow,
-      status: ZoneStatus.irrigationRecommended,
-      cropType: 'Cotton',
+      soilMoisture: 19,
+      rainIntensity: 0,
+      temperature: 29.1,
+      humidity: 49,
+      disease: 'none',
+      diseaseConfidence: 0,
       boundaryPoints: const [
         [0.15, 0.42],
         [0.52, 0.35],
@@ -99,74 +89,23 @@ class MockSeedData {
     [0.03, 0.28]
   ];
 
-  static final Map<String, SensorReading> sensorReadings = {
-    'zone-a': SensorReading(
-      zoneId: 'zone-a',
-      soilMoisture: 22,
-      soilTemperature: 26.8,
-      airTemperature: 28.4,
-      humidity: 54,
-      rainDetected: false,
-      lightIntensity: 45000,
-      waterLevel: 74,
-      ph: 6.5,
-      ec: 1.2,
-      flowRate: 0.0,
-      timestamp: DateTime.now(),
-    ),
-    'zone-b': SensorReading(
-      zoneId: 'zone-b',
-      soilMoisture: 48,
-      soilTemperature: 25.5,
-      airTemperature: 27.2,
-      humidity: 60,
-      rainDetected: false,
-      lightIntensity: 42000,
-      waterLevel: 74,
-      ph: 6.8,
-      ec: 1.4,
-      flowRate: 0.0,
-      timestamp: DateTime.now(),
-    ),
-    'zone-c': SensorReading(
-      zoneId: 'zone-c',
-      soilMoisture: 81,
-      soilTemperature: 24.8,
-      airTemperature: 26.9,
-      humidity: 71,
-      rainDetected: true,
-      lightIntensity: 28000,
-      waterLevel: 74,
-      ph: 7.0,
-      ec: 1.6,
-      flowRate: 2.1,
-      timestamp: DateTime.now(),
-    ),
-    'zone-d': SensorReading(
-      zoneId: 'zone-d',
-      soilMoisture: 19,
-      soilTemperature: 27.5,
-      airTemperature: 29.1,
-      humidity: 49,
-      rainDetected: false,
-      lightIntensity: 48000,
-      waterLevel: 74,
-      ph: 6.3,
-      ec: 1.1,
-      flowRate: 0.0,
-      timestamp: DateTime.now(),
-    ),
-  };
-
   static final Rover rover = Rover(
-    id: 'rover-01',
-    batteryPercent: 78,
-    latitude: 12.9716,
-    longitude: 77.5946,
+    id: 'R-01',
     status: RoverStatus.scanning,
-    currentZoneId: 'zone-b',
-    connectionStatus: ConnectionStatus.strong,
-    lastSync: DateTime.now().subtract(const Duration(minutes: 2)),
+    currentZone: 'zone-b',
+    connection: ConnectionStatus.strong,
+  );
+
+  static final SensorData sensorData = SensorData(
+    soilMoisture: 42,
+    rainIntensity: 0,
+    rainStatus: 'NO RAIN',
+    temperature: 28.4,
+    humidity: 54,
+  );
+
+  static final TankData tankData = TankData(
+    pesticideLevel: 74,
   );
 
   static final List<List<double>> roverPath = [
@@ -183,65 +122,6 @@ class MockSeedData {
     [0.65, 0.85],
     [0.45, 0.75],
   ];
-
-  static final RoverMission activeMission = RoverMission(
-    id: 'mission-001',
-    name: 'Morning Field Scan',
-    status: MissionStatus.running,
-    startedAt: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 7, 30),
-    coveragePercent: 62,
-    zoneSequence: ['zone-a', 'zone-b', 'zone-c', 'zone-d'],
-    currentZoneId: 'zone-b',
-    activityLog: [
-      MissionActivityEntry(timestamp: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 7, 30), label: 'Mission started'),
-      MissionActivityEntry(timestamp: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 7, 35), label: 'Navigating to Zone A'),
-      MissionActivityEntry(timestamp: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 7, 42), label: 'Scanning Zone A'),
-      MissionActivityEntry(timestamp: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 7, 51), label: 'Zone A scan complete'),
-      MissionActivityEntry(timestamp: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 7, 53), label: 'Navigating to Zone B'),
-      MissionActivityEntry(timestamp: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 7, 58), label: 'Scanning Zone B'),
-    ],
-  );
-
-  static final List<CropScan> cropScans = [
-    CropScan(
-      id: 'scan-a-001',
-      zoneId: 'zone-a',
-      imageUrl: '',
-      diagnosis: 'Possible Early Blight',
-      confidencePercent: 73,
-      severity: CropSeverity.moderate,
-      observedInPercent: 15,
-      indicators: ['Leaf discoloration', 'Brown circular lesions', 'Yellowing around spots'],
-      timestamp: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 8, 15),
-    ),
-    CropScan(
-      id: 'scan-c-001',
-      zoneId: 'zone-c',
-      imageUrl: '',
-      diagnosis: 'Healthy - No Issues Detected',
-      confidencePercent: 92,
-      severity: CropSeverity.low,
-      observedInPercent: 0,
-      indicators: [],
-      timestamp: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 8, 45),
-    ),
-  ];
-
-  static final List<IrrigationEvent> irrigationHistory = [
-    IrrigationEvent(id: 'irr-1', zoneId: 'all', durationMinutes: 60, waterUsedLiters: 850, triggeredBy: TriggerType.manual, timestamp: DateTime.now().subtract(const Duration(days: 6))),
-    IrrigationEvent(id: 'irr-2', zoneId: 'all', durationMinutes: 45, waterUsedLiters: 620, triggeredBy: TriggerType.automatic, timestamp: DateTime.now().subtract(const Duration(days: 5))),
-    IrrigationEvent(id: 'irr-3', zoneId: 'all', durationMinutes: 0, waterUsedLiters: 0, triggeredBy: TriggerType.manual, timestamp: DateTime.now().subtract(const Duration(days: 4))),
-    IrrigationEvent(id: 'irr-4', zoneId: 'all', durationMinutes: 55, waterUsedLiters: 780, triggeredBy: TriggerType.automatic, timestamp: DateTime.now().subtract(const Duration(days: 3))),
-    IrrigationEvent(id: 'irr-5', zoneId: 'all', durationMinutes: 65, waterUsedLiters: 920, triggeredBy: TriggerType.manual, timestamp: DateTime.now().subtract(const Duration(days: 2))),
-    IrrigationEvent(id: 'irr-6', zoneId: 'all', durationMinutes: 30, waterUsedLiters: 450, triggeredBy: TriggerType.automatic, timestamp: DateTime.now().subtract(const Duration(days: 1))),
-  ];
-
-  static const Map<String, dynamic> waterSummary = {
-    'today': 0,
-    'thisWeek': 3620,
-    'thisMonth': 12450,
-    'estimatedSavings': 2800,
-  };
 
   static final List<NotificationItem> notifications = [
     NotificationItem(id: 'notif-1', title: 'Irrigation Recommended', body: 'Zone A moisture is critically low (22%).', category: NotificationCategory.irrigation, timestamp: DateTime.now().subtract(const Duration(minutes: 10)), isRead: false),
@@ -271,13 +151,4 @@ class MockSeedData {
     'What crops are healthy?',
     'When did it last rain?',
   ];
-
-  static final AppUser user = AppUser(
-    id: 'user-001',
-    name: 'Utssav',
-    phone: '+91 98765 43210',
-    email: 'utssav@greenvalley.farm',
-    farmName: 'Green Valley Farm',
-    location: 'Karnataka, India',
-  );
 }

@@ -12,7 +12,7 @@ import 'package:jeevan/widgets/status/status_badge.dart';
 import 'package:jeevan/widgets/metrics/metric_row.dart';
 
 class InsightsScreen extends ConsumerWidget {
-  const InsightsScreen({Key? key}) : super(key: key);
+  const InsightsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -202,7 +202,7 @@ class InsightsScreen extends ConsumerWidget {
 class _InsightCard extends StatelessWidget {
   final InsightItem item;
 
-  const _InsightCard({Key? key, required this.item}) : super(key: key);
+  const _InsightCard({required this.item});
 
   @override
   Widget build(BuildContext context) {

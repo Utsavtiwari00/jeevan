@@ -1,12 +1,24 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jeevan/domain/repositories/chat_repository.dart';
-import 'package:jeevan/data/mock/mock_chat_repository.dart';
+import 'package:jeevan/data/groq/groq_chat_repository.dart';
 import 'package:jeevan/domain/models/chat_message.dart';
+import 'package:jeevan/application/field/field_provider.dart';
+import 'package:jeevan/application/rover/rover_provider.dart';
+import 'package:jeevan/application/crop_health/crop_health_provider.dart';
 
 // Repository Provider
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
-  return MockChatRepository();
+  final zoneRepo = ref.watch(zoneRepositoryProvider);
+  final roverRepo = ref.watch(roverRepositoryProvider);
+  final sensorRepo = ref.watch(sensorRepositoryProvider);
+  final cropScanRepo = ref.watch(cropScanRepositoryProvider);
+  return GroqChatRepository(
+    zoneRepository: zoneRepo,
+    roverRepository: roverRepo,
+    sensorRepository: sensorRepo,
+    cropScanRepository: cropScanRepo,
+  );
 });
 
 // Messages Provider
